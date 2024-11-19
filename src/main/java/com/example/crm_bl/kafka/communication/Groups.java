@@ -9,11 +9,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 @EnableKafka
 public class Groups {
 
@@ -34,21 +35,29 @@ public class Groups {
         this.kafkaTemplateId = kafkaTemplateId;
     }
 
-    public List<ResponseGroupDTO> getGroups(){
+    public List<ResponseGroupDTO> getGroups() {
+        groupsContainer.clear();
         kafkaTemplateMessage.send("get-groups", "get-groups");
+        while (groupsContainer.isEmpty()) {
+            continue;
+        }
         List<ResponseGroupDTO> groups = new ArrayList<>(groupsContainer);
         return groups;
     }
 
-    public ResponseGroupDTO getGroup(Long id){
+    public ResponseGroupDTO getGroup(Long id) {
+        groupContainer = null;
         kafkaTemplateId.send("get-groups", id);
+        while (groupContainer == null) {
+            continue;
+        }
         ResponseGroupDTO group = groupContainer;
         return group;
     }
 
 
     @KafkaListener(topics = "get-groups")
-    public void listenGroups( List<ResponseGroupDTO> groups) {
+    public void listenGroups(List<ResponseGroupDTO> groups) {
         groupsContainer = new ArrayList<>(groups);
     }
 

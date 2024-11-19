@@ -32,21 +32,29 @@ public class Artists {
         this.kafkaTemplateId = kafkaTemplateId;
     }
 
-    public List<ResponseArtistDTO> getArtists(){
+    public List<ResponseArtistDTO> getArtists() {
+        artistsContainer.clear();
         kafkaTemplateMessage.send("get-artists", "get-artists");
+        while (artistsContainer.isEmpty()) {
+            continue;
+        }
         List<ResponseArtistDTO> artists = new ArrayList<>(artistsContainer);
         return artists;
     }
 
-    public ResponseArtistDTO getArtist(Long id){
+    public ResponseArtistDTO getArtist(Long id) {
+        artistContainer = null;
         kafkaTemplateId.send("get-artists", id);
+        while (artistContainer == null) {
+            continue;
+        }
         ResponseArtistDTO artist = artistContainer;
         return artist;
     }
 
 
     @KafkaListener(topics = "get-artists")
-    public void listenArtists( List<ResponseArtistDTO> artists) {
+    public void listenArtists(List<ResponseArtistDTO> artists) {
         artistsContainer = new ArrayList<>(artists);
     }
 
@@ -56,6 +64,6 @@ public class Artists {
     }
 
     public void saveArtist(RequestArtistDTO artist) {
-       kafkaTemplate.send("save-artist", artist);
+        kafkaTemplate.send("save-artist", artist);
     }
 }

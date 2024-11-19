@@ -9,11 +9,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 @EnableKafka
 public class Tracks {
 
@@ -35,13 +36,21 @@ public class Tracks {
     }
 
     public List<ResponseTrackDTO> getTracks(){
+        tracksContainer.clear();
         kafkaTemplateMessage.send("get-tracks", "get-tracks");
+        while (tracksContainer.isEmpty()){
+            continue;
+        }
         List<ResponseTrackDTO> tracks = new ArrayList<>(tracksContainer);
         return tracks;
     }
 
     public ResponseTrackDTO getTrack(Long id){
+        trackContainer=null;
         kafkaTemplateId.send("get-tracks", id);
+        while (trackContainer==null){
+            continue;
+        }
         ResponseTrackDTO track = trackContainer;
         return track;
     }

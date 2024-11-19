@@ -9,11 +9,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 @EnableKafka
 public class Schedule {
 
@@ -35,13 +36,21 @@ public class Schedule {
     }
 
     public List<ResponseScheduleDTO> getAllSchedule(){
+        allScheduleContainer.clear();
         kafkaTemplateMessage.send("get-allSchedules", "get-allSchedules");
+        while(allScheduleContainer.isEmpty()){
+            continue;
+        }
         List<ResponseScheduleDTO> schedule = new ArrayList<>(allScheduleContainer);
         return schedule;
     }
 
     public ResponseScheduleDTO getSchedule(Long id){
+        scheduleContainer=null;
         kafkaTemplateId.send("get-schedules", id);
+        while (scheduleContainer==null){
+            continue;
+        }
         ResponseScheduleDTO schedule = scheduleContainer;
         return schedule;
     }
