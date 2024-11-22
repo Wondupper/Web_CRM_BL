@@ -9,21 +9,14 @@ import org.springframework.kafka.config.TopicBuilder;
 public class GroupsTopics {
     @Bean
     public NewTopic getAllGroupsTopic() {
-        return TopicBuilder.name("get-groups")
+        return TopicBuilder.name("get-groupsbl")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic getGroupTopic() {
-        return TopicBuilder.name("get-group")
-                .partitions(1)
-                .replicas(1)
-                .build();
-    }
-    @Bean
-    public NewTopic createGroupTopic() {
-        return TopicBuilder.name("save-group")
+        return TopicBuilder.name("get-groupbl")
                 .partitions(1)
                 .replicas(1)
                 .build();

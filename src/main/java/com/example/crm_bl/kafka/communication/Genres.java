@@ -4,6 +4,9 @@ import com.example.crm_bl.dtos.requests.RequestGenreDTO;
 import com.example.crm_bl.dtos.requests.RequestGenreDTO;
 import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
 import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,26 +21,22 @@ import java.util.List;
 @EnableKafka
 public class Genres {
 
-    private final KafkaTemplate<String, RequestGenreDTO> kafkaTemplate;
-
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private final KafkaTemplate<String, Long> kafkaTemplateId;
-
     private ResponseGenreDTO genreContainer;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     private List<ResponseGenreDTO> genresContainer = new ArrayList<>();
 
     @Autowired
-    public Genres(KafkaTemplate<String, RequestGenreDTO> kafkaTemplate, KafkaTemplate<String, String> kafkaTemplateMessage, KafkaTemplate<String, Long> kafkaTemplateId) {
-        this.kafkaTemplate = kafkaTemplate;
+    public Genres(KafkaTemplate<String, String> kafkaTemplateMessage) {
         this.kafkaTemplateMessage = kafkaTemplateMessage;
-        this.kafkaTemplateId = kafkaTemplateId;
     }
 
     public List<ResponseGenreDTO> getGenres() {
         genresContainer.clear();
-        kafkaTemplateMessage.send("get-genres", "get-genres");
+        kafkaTemplateMessage.send("get-genresdal", "get-genres");
         while (genresContainer.isEmpty()) {
             continue;
         }
@@ -46,8 +45,8 @@ public class Genres {
     }
 
     public ResponseGenreDTO getGenre(Long id) {
-        genresContainer = null;
-        kafkaTemplateId.send("get-genres", id);
+        genreContainer = null;
+        kafkaTemplateMessage.send("get-genredal", id.toString());
         while (genreContainer == null) {
             continue;
         }
@@ -56,17 +55,17 @@ public class Genres {
     }
 
 
-    @KafkaListener(topics = "get-genres")
-    public void listenGenres(List<ResponseGenreDTO> genres) {
-        genresContainer = new ArrayList<>(genres);
+    @KafkaListener(topics = "get-genresbl")
+    public void listenGenres(String genres) throws JsonProcessingException {
+        genresContainer = new ArrayList<>(mapper.readValue(genres, new TypeReference<List<ResponseGenreDTO>>(){}));
     }
 
-    @KafkaListener(topics = "get-genre")
-    public void listenGenre(ResponseGenreDTO genre) {
-        genreContainer = genre;
+    @KafkaListener(topics = "get-genrebl")
+    public void listenGenre(String genre) throws JsonProcessingException {
+        genreContainer = mapper.readValue(genre,ResponseGenreDTO.class);
     }
 
-    public void saveGenre(RequestGenreDTO genre) {
-        kafkaTemplate.send("save-genre", genre);
+    public void saveGenre(RequestGenreDTO genre) throws JsonProcessingException {
+        kafkaTemplateMessage.send("save-genredal", mapper.writeValueAsString(genre));
     }
 }

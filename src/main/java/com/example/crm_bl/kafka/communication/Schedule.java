@@ -2,8 +2,12 @@ package com.example.crm_bl.kafka.communication;
 
 import com.example.crm_bl.dtos.requests.RequestScheduleDTO;
 import com.example.crm_bl.dtos.requests.RequestScheduleDTO;
+import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
 import com.example.crm_bl.dtos.responses.ResponseScheduleDTO;
 import com.example.crm_bl.dtos.responses.ResponseScheduleDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,26 +22,22 @@ import java.util.List;
 @EnableKafka
 public class Schedule {
 
-    private final KafkaTemplate<String, RequestScheduleDTO> kafkaTemplate;
-
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private final KafkaTemplate<String, Long> kafkaTemplateId;
+    private ObjectMapper mapper = new ObjectMapper();
 
     private ResponseScheduleDTO scheduleContainer;
 
     private List<ResponseScheduleDTO> allScheduleContainer = new ArrayList<>();
 
     @Autowired
-    public Schedule(KafkaTemplate<String, RequestScheduleDTO> kafkaTemplate, KafkaTemplate<String, String> kafkaTemplateMessage, KafkaTemplate<String, Long> kafkaTemplateId) {
-        this.kafkaTemplate = kafkaTemplate;
+    public Schedule(KafkaTemplate<String, String> kafkaTemplateMessage) {
         this.kafkaTemplateMessage = kafkaTemplateMessage;
-        this.kafkaTemplateId = kafkaTemplateId;
     }
 
     public List<ResponseScheduleDTO> getAllSchedule(){
         allScheduleContainer.clear();
-        kafkaTemplateMessage.send("get-allSchedules", "get-allSchedules");
+        kafkaTemplateMessage.send("get-allSchedulesdal", "get-allSchedules");
         while(allScheduleContainer.isEmpty()){
             continue;
         }
@@ -47,7 +47,7 @@ public class Schedule {
 
     public ResponseScheduleDTO getSchedule(Long id){
         scheduleContainer=null;
-        kafkaTemplateId.send("get-schedules", id);
+        kafkaTemplateMessage.send("get-scheduledal", id.toString());
         while (scheduleContainer==null){
             continue;
         }
@@ -56,17 +56,17 @@ public class Schedule {
     }
 
 
-    @KafkaListener(topics = "get-schedules")
-    public void listenSchedule( List<ResponseScheduleDTO> schedules) {
-        allScheduleContainer = new ArrayList<>(schedules);
+    @KafkaListener(topics = "get-allSchedulebl")
+    public void listenAllSchedule(String schedules) throws JsonProcessingException {
+        allScheduleContainer = new ArrayList<>(mapper.readValue(schedules, new TypeReference<List<ResponseScheduleDTO>>(){}));
     }
 
-    @KafkaListener(topics = "get-schedule")
-    public void listenSchedule(ResponseScheduleDTO schedule) {
-        scheduleContainer = schedule;
+    @KafkaListener(topics = "get-schedulebl")
+    public void listenSchedule(String schedule) throws JsonProcessingException {
+        scheduleContainer = mapper.readValue(schedule, ResponseScheduleDTO.class);
     }
 
-    public void saveSchedule(RequestScheduleDTO schedule) {
-        kafkaTemplate.send("save-schedule", schedule);
+    public void saveSchedule(RequestScheduleDTO schedule) throws JsonProcessingException {
+        kafkaTemplateMessage.send("save-scheduledal", mapper.writeValueAsString(schedule));
     }
 }

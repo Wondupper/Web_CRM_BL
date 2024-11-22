@@ -2,6 +2,7 @@ package com.example.crm_bl.controllers;
 
 import com.example.crm_bl.dtos.requests.RequestTrackDTO;
 import com.example.crm_bl.kafka.communication.Tracks;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class TracksController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> getTracks(@RequestBody RequestTrackDTO track){
+    public ResponseEntity<?> getTracks(@RequestBody RequestTrackDTO track) throws JsonProcessingException {
         tracks.saveTrack(track);
         return new ResponseEntity<>(HttpStatus.OK);
     }

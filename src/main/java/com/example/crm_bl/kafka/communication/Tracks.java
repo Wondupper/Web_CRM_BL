@@ -2,8 +2,12 @@ package com.example.crm_bl.kafka.communication;
 
 import com.example.crm_bl.dtos.requests.RequestTrackDTO;
 import com.example.crm_bl.dtos.requests.RequestTrackDTO;
+import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
 import com.example.crm_bl.dtos.responses.ResponseTrackDTO;
 import com.example.crm_bl.dtos.responses.ResponseTrackDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,26 +22,22 @@ import java.util.List;
 @EnableKafka
 public class Tracks {
 
-    private final KafkaTemplate<String, RequestTrackDTO> kafkaTemplate;
-
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private final KafkaTemplate<String, Long> kafkaTemplateId;
-
     private ResponseTrackDTO trackContainer;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     private List<ResponseTrackDTO> tracksContainer = new ArrayList<>();
 
     @Autowired
-    public Tracks(KafkaTemplate<String, RequestTrackDTO> kafkaTemplate, KafkaTemplate<String, String> kafkaTemplateMessage, KafkaTemplate<String, Long> kafkaTemplateId) {
-        this.kafkaTemplate = kafkaTemplate;
+    public Tracks(KafkaTemplate<String, String> kafkaTemplateMessage) {
         this.kafkaTemplateMessage = kafkaTemplateMessage;
-        this.kafkaTemplateId = kafkaTemplateId;
     }
 
     public List<ResponseTrackDTO> getTracks(){
         tracksContainer.clear();
-        kafkaTemplateMessage.send("get-tracks", "get-tracks");
+        kafkaTemplateMessage.send("get-tracksdal", "get-tracks");
         while (tracksContainer.isEmpty()){
             continue;
         }
@@ -47,7 +47,7 @@ public class Tracks {
 
     public ResponseTrackDTO getTrack(Long id){
         trackContainer=null;
-        kafkaTemplateId.send("get-tracks", id);
+        kafkaTemplateMessage.send("get-trackdal", id.toString());
         while (trackContainer==null){
             continue;
         }
@@ -56,17 +56,17 @@ public class Tracks {
     }
 
 
-    @KafkaListener(topics = "get-tracks")
-    public void listenTracks( List<ResponseTrackDTO> tracks) {
-        tracksContainer = new ArrayList<>(tracks);
+    @KafkaListener(topics = "get-tracksbl")
+    public void listenTracks(String tracks) throws JsonProcessingException {
+        tracksContainer = new ArrayList<>(mapper.readValue(tracks, new TypeReference<List<ResponseTrackDTO>>(){}));
     }
 
-    @KafkaListener(topics = "get-track")
-    public void listenTrack(ResponseTrackDTO track) {
-        trackContainer = track;
+    @KafkaListener(topics = "get-trackbl")
+    public void listenTrack(String track) throws JsonProcessingException {
+        trackContainer = mapper.readValue(track, ResponseTrackDTO.class);
     }
 
-    public void saveTrack(RequestTrackDTO track) {
-        kafkaTemplate.send("save-track", track);
+    public void saveTrack(RequestTrackDTO track) throws JsonProcessingException {
+        kafkaTemplateMessage.send("save-trackdal", mapper.writeValueAsString(track));
     }
 }

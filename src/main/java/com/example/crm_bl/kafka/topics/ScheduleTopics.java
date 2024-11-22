@@ -9,21 +9,14 @@ import org.springframework.kafka.config.TopicBuilder;
 public class ScheduleTopics {
     @Bean
     public NewTopic getAllScheduleTopic() {
-        return TopicBuilder.name("get-allSchedule")
+        return TopicBuilder.name("get-allSchedulebl")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic getScheduleTopic() {
-        return TopicBuilder.name("get-schedule")
-                .partitions(1)
-                .replicas(1)
-                .build();
-    }
-    @Bean
-    public NewTopic createScheduleTopic() {
-        return TopicBuilder.name("save-schedule")
+        return TopicBuilder.name("get-schedulebl")
                 .partitions(1)
                 .replicas(1)
                 .build();

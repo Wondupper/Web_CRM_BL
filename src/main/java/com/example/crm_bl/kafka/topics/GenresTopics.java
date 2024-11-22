@@ -9,21 +9,14 @@ import org.springframework.kafka.config.TopicBuilder;
 public class GenresTopics {
     @Bean
     public NewTopic getAllGenresTopic() {
-        return TopicBuilder.name("get-genres")
+        return TopicBuilder.name("get-genresbl")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic getGenreTopic() {
-        return TopicBuilder.name("get-genre")
-                .partitions(1)
-                .replicas(1)
-                .build();
-    }
-    @Bean
-    public NewTopic createGenreTopic() {
-        return TopicBuilder.name("save-genre")
+        return TopicBuilder.name("get-genrebl")
                 .partitions(1)
                 .replicas(1)
                 .build();

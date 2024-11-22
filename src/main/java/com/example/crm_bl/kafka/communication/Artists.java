@@ -2,6 +2,10 @@ package com.example.crm_bl.kafka.communication;
 
 import com.example.crm_bl.dtos.requests.RequestArtistDTO;
 import com.example.crm_bl.dtos.responses.ResponseArtistDTO;
+import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,26 +19,22 @@ import java.util.List;
 @EnableKafka
 public class Artists {
 
-    private final KafkaTemplate<String, RequestArtistDTO> kafkaTemplate;
-
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private final KafkaTemplate<String, Long> kafkaTemplateId;
-
     private ResponseArtistDTO artistContainer;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     private List<ResponseArtistDTO> artistsContainer = new ArrayList<>();
 
     @Autowired
-    public Artists(KafkaTemplate<String, RequestArtistDTO> kafkaTemplate, KafkaTemplate<String, String> kafkaTemplateMessage, KafkaTemplate<String, Long> kafkaTemplateId) {
-        this.kafkaTemplate = kafkaTemplate;
+    public Artists(KafkaTemplate<String, String> kafkaTemplateMessage) {
         this.kafkaTemplateMessage = kafkaTemplateMessage;
-        this.kafkaTemplateId = kafkaTemplateId;
     }
 
     public List<ResponseArtistDTO> getArtists() {
         artistsContainer.clear();
-        kafkaTemplateMessage.send("get-artists", "get-artists");
+        kafkaTemplateMessage.send("get-artistsdal", "get-artists");
         while (artistsContainer.isEmpty()) {
             continue;
         }
@@ -44,7 +44,7 @@ public class Artists {
 
     public ResponseArtistDTO getArtist(Long id) {
         artistContainer = null;
-        kafkaTemplateId.send("get-artists", id);
+        kafkaTemplateMessage.send("get-artistdal", id.toString());
         while (artistContainer == null) {
             continue;
         }
@@ -53,17 +53,17 @@ public class Artists {
     }
 
 
-    @KafkaListener(topics = "get-artists")
-    public void listenArtists(List<ResponseArtistDTO> artists) {
-        artistsContainer = new ArrayList<>(artists);
+    @KafkaListener(topics = "get-artistsbl")
+    public void listenArtists(String artists) throws JsonProcessingException {
+        artistsContainer = new ArrayList<>(mapper.readValue(artists, new TypeReference<List<ResponseArtistDTO>>(){}));
     }
 
-    @KafkaListener(topics = "get-artist")
-    public void listenArtist(ResponseArtistDTO artist) {
-        artistContainer = artist;
+    @KafkaListener(topics = "get-artistbl")
+    public void listenArtist(String artist) throws JsonProcessingException {
+        artistContainer = mapper.readValue(artist,ResponseArtistDTO.class);
     }
 
-    public void saveArtist(RequestArtistDTO artist) {
-        kafkaTemplate.send("save-artist", artist);
+    public void saveArtist(RequestArtistDTO artist) throws JsonProcessingException {
+        kafkaTemplateMessage.send("save-artistdal", mapper.writeValueAsString(artist));
     }
 }

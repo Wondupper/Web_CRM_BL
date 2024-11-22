@@ -2,8 +2,12 @@ package com.example.crm_bl.kafka.communication;
 
 import com.example.crm_bl.dtos.requests.RequestGroupDTO;
 import com.example.crm_bl.dtos.requests.RequestGroupDTO;
+import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
 import com.example.crm_bl.dtos.responses.ResponseGroupDTO;
 import com.example.crm_bl.dtos.responses.ResponseGroupDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,26 +22,22 @@ import java.util.List;
 @EnableKafka
 public class Groups {
 
-    private final KafkaTemplate<String, RequestGroupDTO> kafkaTemplate;
-
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private final KafkaTemplate<String, Long> kafkaTemplateId;
-
     private ResponseGroupDTO groupContainer;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     private List<ResponseGroupDTO> groupsContainer = new ArrayList<>();
 
     @Autowired
-    public Groups(KafkaTemplate<String, RequestGroupDTO> kafkaTemplate, KafkaTemplate<String, String> kafkaTemplateMessage, KafkaTemplate<String, Long> kafkaTemplateId) {
-        this.kafkaTemplate = kafkaTemplate;
+    public Groups(KafkaTemplate<String, String> kafkaTemplateMessage) {
         this.kafkaTemplateMessage = kafkaTemplateMessage;
-        this.kafkaTemplateId = kafkaTemplateId;
     }
 
     public List<ResponseGroupDTO> getGroups() {
         groupsContainer.clear();
-        kafkaTemplateMessage.send("get-groups", "get-groups");
+        kafkaTemplateMessage.send("get-groupsdal", "get-groups");
         while (groupsContainer.isEmpty()) {
             continue;
         }
@@ -47,7 +47,7 @@ public class Groups {
 
     public ResponseGroupDTO getGroup(Long id) {
         groupContainer = null;
-        kafkaTemplateId.send("get-groups", id);
+        kafkaTemplateMessage.send("get-groupdal", id.toString());
         while (groupContainer == null) {
             continue;
         }
@@ -56,18 +56,18 @@ public class Groups {
     }
 
 
-    @KafkaListener(topics = "get-groups")
-    public void listenGroups(List<ResponseGroupDTO> groups) {
-        groupsContainer = new ArrayList<>(groups);
+    @KafkaListener(topics = "get-groupsbl")
+    public void listenGroups(String groups) throws JsonProcessingException {
+        groupsContainer = new ArrayList<>(mapper.readValue(groups, new TypeReference<List<ResponseGroupDTO>>(){}));
     }
 
-    @KafkaListener(topics = "get-group")
-    public void listenGroup(ResponseGroupDTO group) {
-        groupContainer = group;
+    @KafkaListener(topics = "get-groupbl")
+    public void listenGroup(String group) throws JsonProcessingException {
+        groupContainer = mapper.readValue(group, ResponseGroupDTO.class);
     }
 
-    public void saveGroup(RequestGroupDTO group) {
-        kafkaTemplate.send("save-group", group);
+    public void saveGroup(RequestGroupDTO group) throws JsonProcessingException {
+        kafkaTemplateMessage.send("save-groupdal", mapper.writeValueAsString(group));
     }
 }
 
