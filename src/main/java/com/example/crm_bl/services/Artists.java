@@ -1,8 +1,7 @@
-package com.example.crm_bl.kafka.communication;
+package com.example.crm_bl.services;
 
 import com.example.crm_bl.dtos.requests.RequestArtistDTO;
 import com.example.crm_bl.dtos.responses.ResponseArtistDTO;
-import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

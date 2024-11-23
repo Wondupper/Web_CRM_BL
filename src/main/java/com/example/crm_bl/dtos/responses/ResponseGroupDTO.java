@@ -7,5 +7,5 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-public record ResponseGroupDTO(Long id, String name, List<ResponseArtistDTO> artists) {
+public record ResponseGroupDTO(Long id, String name, ResponseGenreDTO genre, List<ResponseArtistDTO> artists, List<ResponseTrackDTO> tracks) {
 }

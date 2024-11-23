@@ -7,5 +7,5 @@ import java.time.LocalDateTime;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-public record RequestScheduleDTO(LocalDateTime time, RequestTrackDTO track) {
+public record RequestScheduleDTO(LocalDateTime time, String track) {
 }

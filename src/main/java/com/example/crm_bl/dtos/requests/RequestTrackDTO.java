@@ -5,5 +5,5 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-public record RequestTrackDTO(String name, RequestGroupDTO group) {
+public record RequestTrackDTO(String name, String group) {
 }

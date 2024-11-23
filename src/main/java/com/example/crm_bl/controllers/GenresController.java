@@ -1,7 +1,7 @@
 package com.example.crm_bl.controllers;
 
 import com.example.crm_bl.dtos.requests.RequestGenreDTO;
-import com.example.crm_bl.kafka.communication.Genres;
+import com.example.crm_bl.services.Genres;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

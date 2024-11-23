@@ -1,4 +1,4 @@
-package com.example.crm_bl.configs;
+package com.example.crm_bl.kafka.configs;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;

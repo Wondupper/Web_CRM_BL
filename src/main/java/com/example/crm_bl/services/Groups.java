@@ -1,9 +1,6 @@
-package com.example.crm_bl.kafka.communication;
+package com.example.crm_bl.services;
 
 import com.example.crm_bl.dtos.requests.RequestGroupDTO;
-import com.example.crm_bl.dtos.requests.RequestGroupDTO;
-import com.example.crm_bl.dtos.responses.ResponseGenreDTO;
-import com.example.crm_bl.dtos.responses.ResponseGroupDTO;
 import com.example.crm_bl.dtos.responses.ResponseGroupDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
