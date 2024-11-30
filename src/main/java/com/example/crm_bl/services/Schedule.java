@@ -2,6 +2,7 @@ package com.example.crm_bl.services;
 
 import com.example.crm_bl.dtos.requests.RequestScheduleDTO;
 import com.example.crm_bl.dtos.responses.ResponseScheduleDTO;
+import com.example.crm_bl.dtos.responses.ResponseScheduleDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @EnableKafka
@@ -22,9 +25,9 @@ public class Schedule {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private ResponseScheduleDTO scheduleContainer;
+    private CompletableFuture<List<ResponseScheduleDTO>> schedulesContainer;
 
-    private List<ResponseScheduleDTO> allScheduleContainer = new ArrayList<>();
+    private CompletableFuture<ResponseScheduleDTO> scheduleContainer;
 
     @Autowired
     public Schedule(KafkaTemplate<String, String> kafkaTemplateMessage) {
@@ -32,34 +35,37 @@ public class Schedule {
     }
 
     public List<ResponseScheduleDTO> getAllSchedule(){
-        allScheduleContainer.clear();
+        schedulesContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-allSchedulesdal", "get-allSchedules");
-        while(allScheduleContainer.isEmpty()){
-            continue;
+        try {
+            return schedulesContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        List<ResponseScheduleDTO> schedule = new ArrayList<>(allScheduleContainer);
-        return schedule;
     }
 
     public ResponseScheduleDTO getSchedule(Long id){
-        scheduleContainer=null;
+        scheduleContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-scheduledal", id.toString());
-        while (scheduleContainer==null){
-            continue;
+        try {
+            return scheduleContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        ResponseScheduleDTO schedule = scheduleContainer;
-        return schedule;
     }
 
 
     @KafkaListener(topics = "get-allSchedulebl")
     public void listenAllSchedule(String schedules) throws JsonProcessingException {
-        allScheduleContainer = new ArrayList<>(mapper.readValue(schedules, new TypeReference<List<ResponseScheduleDTO>>(){}));
+        List<ResponseScheduleDTO> scheduleList = new ArrayList<>(mapper.readValue(schedules, new TypeReference<List<ResponseScheduleDTO>>() {}));
+            schedulesContainer.complete(scheduleList);
     }
 
     @KafkaListener(topics = "get-schedulebl")
     public void listenSchedule(String schedule) throws JsonProcessingException {
-        scheduleContainer = mapper.readValue(schedule, ResponseScheduleDTO.class);
+        ResponseScheduleDTO schedulee = mapper.readValue(schedule, ResponseScheduleDTO.class);
+            scheduleContainer.complete(schedulee);
+
     }
 
     public void saveSchedule(RequestScheduleDTO schedule) throws JsonProcessingException {

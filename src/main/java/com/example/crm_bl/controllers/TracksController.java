@@ -24,12 +24,12 @@ public class TracksController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getTracks(@PathVariable Long id){
+    public ResponseEntity<?> getTrack(@PathVariable Long id){
         return new ResponseEntity<>(tracks.getTrack(id), HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity<?> getTracks(@RequestBody RequestTrackDTO track) throws JsonProcessingException {
+    public ResponseEntity<?> saveTrack(@RequestBody RequestTrackDTO track) throws JsonProcessingException {
         tracks.saveTrack(track);
         return new ResponseEntity<>(HttpStatus.OK);
     }

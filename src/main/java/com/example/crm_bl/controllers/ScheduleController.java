@@ -19,7 +19,7 @@ public class ScheduleController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getSchedule(){
+    public ResponseEntity<?> getAllSchedule(){
         return new ResponseEntity<>(schedules.getAllSchedule(), HttpStatus.OK);
     }
 
@@ -29,7 +29,7 @@ public class ScheduleController {
     }
 
     @PostMapping()
-    public ResponseEntity<?> getSchedule(@RequestBody RequestScheduleDTO schedule) throws JsonProcessingException {
+    public ResponseEntity<?> saveSchedule(@RequestBody RequestScheduleDTO schedule) throws JsonProcessingException {
         schedules.saveSchedule(schedule);
         return new ResponseEntity<>(HttpStatus.OK);
     }

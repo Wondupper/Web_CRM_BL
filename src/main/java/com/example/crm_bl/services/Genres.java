@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @EnableKafka
@@ -20,11 +22,11 @@ public class Genres {
 
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private ResponseGenreDTO genreContainer;
-
     private ObjectMapper mapper = new ObjectMapper();
 
-    private List<ResponseGenreDTO> genresContainer = new ArrayList<>();
+    private CompletableFuture<List<ResponseGenreDTO>> genresContainer;
+
+    private CompletableFuture<ResponseGenreDTO> genreContainer;
 
     @Autowired
     public Genres(KafkaTemplate<String, String> kafkaTemplateMessage) {
@@ -32,34 +34,37 @@ public class Genres {
     }
 
     public List<ResponseGenreDTO> getGenres() {
-        genresContainer.clear();
+        genresContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-genresdal", "get-genres");
-        while (genresContainer.isEmpty()) {
-            continue;
+        try {
+            return genresContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        List<ResponseGenreDTO> genres = new ArrayList<>(genresContainer);
-        return genres;
     }
 
     public ResponseGenreDTO getGenre(Long id) {
-        genreContainer = null;
+        genreContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-genredal", id.toString());
-        while (genreContainer == null) {
-            continue;
+        try {
+            return genreContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        ResponseGenreDTO genre = genreContainer;
-        return genre;
     }
 
 
     @KafkaListener(topics = "get-genresbl")
     public void listenGenres(String genres) throws JsonProcessingException {
-        genresContainer = new ArrayList<>(mapper.readValue(genres, new TypeReference<List<ResponseGenreDTO>>(){}));
+        List<ResponseGenreDTO> genreList = new ArrayList<>(mapper.readValue(genres, new TypeReference<List<ResponseGenreDTO>>() {
+        }));
+        genresContainer.complete(genreList);
     }
 
     @KafkaListener(topics = "get-genrebl")
     public void listenGenre(String genre) throws JsonProcessingException {
-        genreContainer = mapper.readValue(genre,ResponseGenreDTO.class);
+        ResponseGenreDTO genree = mapper.readValue(genre, ResponseGenreDTO.class);
+        genreContainer.complete(genree);
     }
 
     public void saveGenre(RequestGenreDTO genre) throws JsonProcessingException {

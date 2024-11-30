@@ -24,12 +24,12 @@ public class GroupsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getGroups(@PathVariable Long id){
+    public ResponseEntity<?> getGroup(@PathVariable Long id){
         return new ResponseEntity<>(groups.getGroup(id), HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity<?> getGroups(@RequestBody RequestGroupDTO group) throws JsonProcessingException {
+    public ResponseEntity<?> saveGroup(@RequestBody RequestGroupDTO group) throws JsonProcessingException {
         groups.saveGroup(group);
         return new ResponseEntity<>(HttpStatus.OK);
     }

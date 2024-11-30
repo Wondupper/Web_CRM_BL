@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17.2
-    restart: "no"
+    restart: "always"
     ports:
       - "5432:5432"
     environment:
@@ -16,7 +16,7 @@ services:
       retries: 5
   kafka:
     image: confluentinc/cp-kafka:7.7.1
-    restart: "no"
+    restart: "always"
     ports:
       - "29092:29092"
       - "9092:9092"
@@ -43,7 +43,7 @@ services:
     image: rgombework/web-crm-bl
     environment:
       - KAFKA_HOST=kafka
-    restart: "no"
+    restart: "always"
     ports:
       - "8081:8081"
     depends_on:
@@ -55,7 +55,7 @@ services:
     environment:
       - KAFKA_HOST=kafka
       - POSTGRES_HOST=postgres
-    restart: "no"
+    restart: "always"
     ports:
       - "8082:8082"
     depends_on:

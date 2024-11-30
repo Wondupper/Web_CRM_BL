@@ -24,12 +24,12 @@ public class GenresController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getGenres(@PathVariable Long id){
+    public ResponseEntity<?> getGenre(@PathVariable Long id){
         return new ResponseEntity<>(genres.getGenre(id), HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity<?> getGenres(@RequestBody RequestGenreDTO genre) throws JsonProcessingException {
+    public ResponseEntity<?> saveGenre(@RequestBody RequestGenreDTO genre) throws JsonProcessingException {
         genres.saveGenre(genre);
         return new ResponseEntity<>(HttpStatus.OK);
     }

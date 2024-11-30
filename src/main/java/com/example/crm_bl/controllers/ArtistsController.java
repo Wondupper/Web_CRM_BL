@@ -24,12 +24,12 @@ public class ArtistsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getArtists(@PathVariable Long id){
+    public ResponseEntity<?> getArtist(@PathVariable Long id){
         return new ResponseEntity<>(artists.getArtist(id), HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity<?> getArtists(@RequestBody RequestArtistDTO artist) throws JsonProcessingException {
+    public ResponseEntity<?> saveArtist(@RequestBody RequestArtistDTO artist) throws JsonProcessingException {
         artists.saveArtist(artist);
         return new ResponseEntity<>(HttpStatus.OK);
     }

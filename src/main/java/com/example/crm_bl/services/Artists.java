@@ -2,6 +2,7 @@ package com.example.crm_bl.services;
 
 import com.example.crm_bl.dtos.requests.RequestArtistDTO;
 import com.example.crm_bl.dtos.responses.ResponseArtistDTO;
+import com.example.crm_bl.dtos.responses.ResponseArtistDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @EnableKafka
@@ -20,11 +23,12 @@ public class Artists {
 
     private final KafkaTemplate<String, String> kafkaTemplateMessage;
 
-    private ResponseArtistDTO artistContainer;
-
     private ObjectMapper mapper = new ObjectMapper();
 
-    private List<ResponseArtistDTO> artistsContainer = new ArrayList<>();
+    private CompletableFuture<List<ResponseArtistDTO>> artistsContainer;
+
+    private CompletableFuture<ResponseArtistDTO> artistContainer;
+
 
     @Autowired
     public Artists(KafkaTemplate<String, String> kafkaTemplateMessage) {
@@ -32,34 +36,37 @@ public class Artists {
     }
 
     public List<ResponseArtistDTO> getArtists() {
-        artistsContainer.clear();
+        artistsContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-artistsdal", "get-artists");
-        while (artistsContainer.isEmpty()) {
-            continue;
+        try {
+            return artistsContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        List<ResponseArtistDTO> artists = new ArrayList<>(artistsContainer);
-        return artists;
     }
 
     public ResponseArtistDTO getArtist(Long id) {
-        artistContainer = null;
+        artistContainer = new CompletableFuture<>();
         kafkaTemplateMessage.send("get-artistdal", id.toString());
-        while (artistContainer == null) {
-            continue;
+        try {
+            return artistContainer.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Ошибка получения", e);
         }
-        ResponseArtistDTO artist = artistContainer;
-        return artist;
     }
 
 
     @KafkaListener(topics = "get-artistsbl")
     public void listenArtists(String artists) throws JsonProcessingException {
-        artistsContainer = new ArrayList<>(mapper.readValue(artists, new TypeReference<List<ResponseArtistDTO>>(){}));
+        List<ResponseArtistDTO> artistList = new ArrayList<>(mapper.readValue(artists, new TypeReference<List<ResponseArtistDTO>>() {
+        }));
+        artistsContainer.complete(artistList);
     }
 
     @KafkaListener(topics = "get-artistbl")
     public void listenArtist(String artist) throws JsonProcessingException {
-        artistContainer = mapper.readValue(artist,ResponseArtistDTO.class);
+        ResponseArtistDTO artiste = mapper.readValue(artist, ResponseArtistDTO.class);
+        artistContainer.complete(artiste);
     }
 
     public void saveArtist(RequestArtistDTO artist) throws JsonProcessingException {
